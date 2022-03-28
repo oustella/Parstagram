@@ -8,6 +8,7 @@
 import UIKit
 import AlamofireImage
 import Parse
+import MessageInputBar
 
 class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
@@ -34,24 +35,41 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let post = posts[indexPath.row]
-        let cell = tableView.dequeueReusableCell(withIdentifier: "FeedTableViewCell") as! FeedTableViewCell
+        let post = posts[indexPath.section]
+        let comments = post["comment"] as? [PFObject] ?? []
         
-        let user = post["author"] as! PFUser
-        cell.usernameLabel.text = user.username
-        cell.captionLabel.text = post["caption"] as! String
-        
-        let imageFile = post["image"] as! PFFileObject
-        let urlString = imageFile.url!
-        let url = URL(string: urlString)!
-        
-        cell.postImage.af.setImage(withURL: url)
-        
-        return cell
-        
+        if indexPath.row == 0 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "FeedTableViewCell") as! FeedTableViewCell
+            
+            let user = post["author"] as! PFUser
+            cell.usernameLabel.text = user.username
+            cell.captionLabel.text = post["caption"] as! String
+            
+            let imageFile = post["image"] as! PFFileObject
+            let urlString = imageFile.url!
+            let url = URL(string: urlString)!
+            
+            cell.postImage.af.setImage(withURL: url)
+            
+            return cell
+        } else {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "CommentTableViewCell") as! CommentTableViewCell
+            let comment = comments[indexPath.row - 1]
+            let user = comment["author"] as! PFUser
+            cell.commentAuthor.text = user.username as! String
+            cell.commentTextLabel.text = comment["text"] as! String
+            return cell
+            
+        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        let post = posts[section]
+        let comments = (post["comment"] as? [PFObject]) ?? []
+        return comments.count + 1
+    }
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
         return posts.count
     }
     
@@ -65,7 +83,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     @objc func queryParse(postCount: Int) -> Void {
 //        postCount = incrementLoad
         let query = PFQuery(className: "Post")
-        query.includeKey("author")
+        query.includeKeys(["author", "comment", "comment.author"])
         query.limit = postCount
         query.order(byDescending: "createdAt")
         query.findObjectsInBackground { (posts, error) in
@@ -93,8 +111,43 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
 //        }
 //    }
     
+    @IBAction func onLogout(_ sender: Any) {
+        PFUser.logOut()
+        
+        let main = UIStoryboard(name: "Main", bundle: nil)
+        let loginViewController = main.instantiateViewController(identifier: "LoginViewController")
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let delegate = windowScene.delegate as? SceneDelegate else { return }
+        delegate.window?.rootViewController = loginViewController
+    }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let post = posts[indexPath.row]
+        let comment = PFObject(className: "Comment")
+        comment["text"] = "Generatign a new comment."
+        comment["post"] = post
+        comment["author"] = PFUser.current()
+        
+        post.add(comment, forKey: "comment")
+        post.saveInBackground { success, error in
+            if success {
+                print("Comment saved")
+            } else {
+                print("Error saving comment")
+            }
+            
+        }
+        
+    }
+    
+    let commentBar = MessageInputBar()
+    override var inputAccessoryView: UIView? {
+        return commentBar
+    }
 
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
     /*
     // MARK: - Navigation
 
