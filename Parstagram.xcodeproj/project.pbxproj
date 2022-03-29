@@ -127,6 +127,7 @@
 		D96F52B727E6972B0086F953 = {
 			isa = PBXGroup;
 			children = (
+				D96F52E327E6972D0086F953 /* ParstagramUITests */,
 				D96F52C227E6972B0086F953 /* Parstagram */,
 				D96F52D927E6972D0086F953 /* ParstagramTests */,
 				D96F52C127E6972B0086F953 /* Products */,
@@ -168,7 +169,6 @@
 			isa = PBXGroup;
 			children = (
 				D96F52DA27E6972D0086F953 /* ParstagramTests.swift */,
-				D96F52E327E6972D0086F953 /* ParstagramUITests */,
 			);
 			path = ParstagramTests;
 			sourceTree = "<group>";
@@ -179,7 +179,8 @@
 				D96F52E427E6972D0086F953 /* ParstagramUITests.swift */,
 				D96F52E627E6972D0086F953 /* ParstagramUITestsLaunchTests.swift */,
 			);
-			path = ParstagramUITests;
+			name = ParstagramUITests;
+			path = ParstagramTests/ParstagramUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

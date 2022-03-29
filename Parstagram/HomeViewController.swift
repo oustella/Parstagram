@@ -10,7 +10,7 @@ import AlamofireImage
 import Parse
 import MessageInputBar
 
-class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, MessageInputBarDelegate {
 
     @IBOutlet weak var tableView: UITableView!
     var posts = [PFObject]()
@@ -18,14 +18,43 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var postCount: Int!
     let incrementLoad = 1
     
+    let commentBar = MessageInputBar()
+    var showsCommentBar = false
+    
+    var selectedPost: PFObject!
+    
+    override var inputAccessoryView: UIView? {
+        return commentBar
+    }
+
+    override var canBecomeFirstResponder: Bool {
+        return showsCommentBar
+    }
+    
+    @objc func keyboardWillHidden(note: Notification) {
+        commentBar.inputTextView.text = nil
+        showsCommentBar = false
+        becomeFirstResponder() // evaluate 'canBecomeFirstResponder'
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         postCount = incrementLoad
         queryParse(postCount: postCount)
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.keyboardDismissMode = .interactive
         myRefreshControl.addTarget(self, action: #selector(queryParse), for: .valueChanged)
         tableView.insertSubview(myRefreshControl, at: 0)
+        
+        // hide the comment bar when done
+        let center = NotificationCenter.default
+        center.addObserver(self, selector: #selector(keyboardWillHidden(note:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        commentBar.delegate = self
+        commentBar.inputTextView.placeholder = "Add a comment... "
+        commentBar.sendButton.title = "Post"
+        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -52,21 +81,26 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             cell.postImage.af.setImage(withURL: url)
             
             return cell
-        } else {
+            
+        } else if indexPath.row <= comments.count {
             let cell = tableView.dequeueReusableCell(withIdentifier: "CommentTableViewCell") as! CommentTableViewCell
             let comment = comments[indexPath.row - 1]
             let user = comment["author"] as! PFUser
             cell.commentAuthor.text = user.username as! String
             cell.commentTextLabel.text = comment["text"] as! String
+            
             return cell
             
+        } else {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "MakeCommentTableViewCell")!
+            return cell
         }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let post = posts[section]
         let comments = (post["comment"] as? [PFObject]) ?? []
-        return comments.count + 1
+        return comments.count + 2  // one for post one for make comment
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -74,14 +108,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if indexPath.row + 1 == posts.count {
+        if indexPath.section + 1 == posts.count {
             postCount = postCount + incrementLoad
             queryParse(postCount: postCount)
         }
     }
     
     @objc func queryParse(postCount: Int) -> Void {
-//        postCount = incrementLoad
         let query = PFQuery(className: "Post")
         query.includeKeys(["author", "comment", "comment.author"])
         query.limit = postCount
@@ -95,21 +128,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             }
         }
     }
-
-//    @objc func queryMoreParse() {
-//        postCount = postCount + incrementLoad
-//        let query = PFQuery(className: "Post")
-//        query.includeKey("author")
-//        query.limit = postCount
-//        query.order(byDescending: "createdAt")
-//        query.findObjectsInBackground { (posts, error) in
-//            if posts != nil {
-//                print("retrieve more posts!")
-//                self.posts = posts!
-//                self.tableView.reloadData()
-//            }
-//        }
-//    }
     
     @IBAction func onLogout(_ sender: Any) {
         PFUser.logOut()
@@ -122,32 +140,50 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let post = posts[indexPath.row]
-        let comment = PFObject(className: "Comment")
-        comment["text"] = "Generatign a new comment."
-        comment["post"] = post
-        comment["author"] = PFUser.current()
+        let post = posts[indexPath.section]
+        selectedPost = post
+        let comments = post["comment"] as? [PFObject] ?? []
         
-        post.add(comment, forKey: "comment")
-        post.saveInBackground { success, error in
+        if indexPath.row == comments.count + 1 {
+            showsCommentBar = true
+            becomeFirstResponder()
+            commentBar.inputTextView.becomeFirstResponder()
+        }
+    }
+    
+    func messageInputBar(_ inputBar: MessageInputBar, didPressSendButtonWith text: String) {
+        
+        // add a comment
+        let comment = PFObject(className: "Comment")
+        comment["text"] = text
+        comment["post"] = selectedPost
+        comment["author"] = PFUser.current()
+
+        selectedPost.add(comment, forKey: "comment")
+        selectedPost.saveInBackground { success, error in
             if success {
                 print("Comment saved")
             } else {
                 print("Error saving comment")
             }
-            
         }
         
+        tableView.reloadData()
+        
+        // clear out the comment text and dimiss the comment bar
+        commentBar.inputTextView.text = nil
+        showsCommentBar = false
+        becomeFirstResponder()
+        commentBar.inputTextView.resignFirstResponder()
     }
     
-    let commentBar = MessageInputBar()
-    override var inputAccessoryView: UIView? {
-        return commentBar
-    }
-
-    override var canBecomeFirstResponder: Bool {
-        return true
-    }
+//    func messageInputBar(_ inputBar: MessageInputBar, didChangeIntrinsicContentTo size: CGSize) {
+//        <#code#>
+//    }
+//
+//    func messageInputBar(_ inputBar: MessageInputBar, textViewTextDidChangeTo text: String) {
+//        <#code#>
+//    }
     /*
     // MARK: - Navigation
 
