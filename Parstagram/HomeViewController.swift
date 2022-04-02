@@ -66,7 +66,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let post = posts[indexPath.section]
         let comments = post["comment"] as? [PFObject] ?? []
-        
+//        print(comments)
         if indexPath.row == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "FeedTableViewCell") as! FeedTableViewCell
             
@@ -85,6 +85,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         } else if indexPath.row <= comments.count {
             let cell = tableView.dequeueReusableCell(withIdentifier: "CommentTableViewCell") as! CommentTableViewCell
             let comment = comments[indexPath.row - 1]
+            print(comment)
             let user = comment["author"] as! PFUser
             cell.commentAuthor.text = user.username as! String
             cell.commentTextLabel.text = comment["text"] as! String

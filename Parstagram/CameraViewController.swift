@@ -34,7 +34,6 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             picker.sourceType = .photoLibrary
         }
         present(picker, animated: true, completion: nil)
-        
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
@@ -69,7 +68,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
                 }
             }
         } else {
-            displayAlert(withTitle: "A picture is required.", message: "Oops")
+            displayAlert(withTitle: "Oops", message: "A picture is required.")
         }
     }
     
