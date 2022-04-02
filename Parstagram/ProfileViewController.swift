@@ -11,7 +11,6 @@ import AlamofireImage
 
 class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
-//    var imageIsChanged = false
     var currentUser = PFUser.current()!
     @IBOutlet weak var profileImage: UIImageView!
  
@@ -39,7 +38,6 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         let scaledImage = image.af.imageAspectScaled(toFill: size)
        
         profileImage.image = scaledImage
-//        imageIsChanged = true
         updateProfilePicture()
         dismiss(animated: true)
         

@@ -11,6 +11,7 @@ class CommentTableViewCell: UITableViewCell {
 
     @IBOutlet weak var commentAuthor: UILabel!
     @IBOutlet weak var commentTextLabel: UILabel!
+    @IBOutlet weak var commenterProfileImage: UIImageView!
     
     override func awakeFromNib() {
         super.awakeFromNib()

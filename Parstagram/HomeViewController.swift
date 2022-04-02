@@ -13,6 +13,7 @@ import MessageInputBar
 class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, MessageInputBarDelegate {
 
     @IBOutlet weak var tableView: UITableView!
+    
     var posts = [PFObject]()
     let myRefreshControl = UIRefreshControl()
     var postCount: Int!
@@ -77,8 +78,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             let imageFile = post["image"] as! PFFileObject
             let urlString = imageFile.url!
             let url = URL(string: urlString)!
-            
             cell.postImage.af.setImage(withURL: url)
+            
+            showLatestPic(user, target: cell.authorProfileImage)
             
             return cell
             
@@ -90,11 +92,31 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             cell.commentAuthor.text = user.username as! String
             cell.commentTextLabel.text = comment["text"] as! String
             
+            showLatestPic(user, target: cell.commenterProfileImage)
+
             return cell
             
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "MakeCommentTableViewCell")!
             return cell
+        }
+    }
+    
+    func showLatestPic(_ currentUser: PFUser, target userProfileImage: UIImageView) {
+        let profiles = currentUser["profile"] as? [PFObject] ?? []
+        if !profiles.isEmpty {
+            let latestProfile = profiles.last!
+            latestProfile.fetchIfNeededInBackground { (profile, error) in
+                if error == nil {
+                    let imageFile = profile?["image"] as! PFFileObject
+                    let urlString = imageFile.url!
+                    let url = URL(string: urlString)!
+                    userProfileImage.makeRounded()
+                    userProfileImage.af.setImage(withURL: url)
+                } else {
+                    print(error?.localizedDescription)
+                }
+            }
         }
     }
     

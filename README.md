@@ -16,13 +16,13 @@ The following **required** functionality is completed:
 The following **bonus** features are implemented:
 
 - [X] User can add a profile picture. (2pts)
-- [ ] Profile pictures are shown for posts and comments. (2pts)
+- [X] Profile pictures are shown for posts and comments. (2pts)
 
 ## Video Walkthrough
 
 Here's a walkthrough of implemented user stories:
 
-<img src='https://github.com/oustella/Parstagram/blob/master/demo2.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
+<img src='https://github.com/oustella/Parstagram/blob/master/demo3.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
 
 # Parstagram - Part I
 
